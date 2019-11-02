@@ -7,20 +7,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	 "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+
 )
 
 type rewardsRequest struct {
 	Mobilenumber string `json:"Mobilenumber"`
 }
 
-type rewardsResponse struct {
-	status string
-}
 
+
+type RewardsResponse struct {
+    Status   string `json:"Status"`
+	MobileNumber      string `json:"MobileNumber"`
+	ConfirmationCode  int    `json:"ConfirmationCode"`
+}
 
 var db = dynamodb.New(session.New(), aws.NewConfig())
 
-func getRewards(rewardsReq rewardsRequest) {
+func getRewards(rewardsReq rewardsRequest) (RewardsResponse,error){
 	fmt.Println("rewardsReq in getRewards", rewardsReq.Mobilenumber)
 
 	input := &dynamodb.GetItemInput{
@@ -34,18 +39,25 @@ func getRewards(rewardsReq rewardsRequest) {
 	fmt.Printf("Input data %v", input)
 	result, err := db.GetItem(input)
 	fmt.Printf("Result Data %v", result)
-
+    rewardsResponse :=RewardsResponse{}
 	if err != nil {
 		fmt.Println("ERROR", err.Error())
-		fmt.Println("Inside Check Rewards new code", rewardsReq.Mobilenumber, result)
 
 	} else {
-		fmt.Println("Inside Check Rewards Mobile Results", result)
 
-	}
-	rewardsResponse := new(rewardsResponse)
-	rewardsResponse.status = "200"
-	return
+	    err = dynamodbattribute.UnmarshalMap(result.Item, &rewardsResponse)
+        if(err!=nil){
+            fmt.Println("Error During Unmarshal")
+         }
+         if(len(rewardsResponse.MobileNumber)!=0){
+            rewardsResponse.Status="200"
+         }else {
+              rewardsResponse.Status="404"
+         }
+      }
+
+    fmt.Printf("RewardsResponse {}",rewardsResponse)
+	return rewardsResponse,nil
 
 }
 

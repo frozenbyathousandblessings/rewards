@@ -38,7 +38,7 @@ func HandleRequest(ctx context.Context, rewardEvent RewardEvent) (string, error)
 	av, err := dynamodbattribute.MarshalMap(rewardEvent)
 	fmt.Println(av)
 	if err != nil {
-		fmt.Println("Got error marshalling new movie item:")
+		fmt.Println("Got error marshalling new Rewards item:")
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
